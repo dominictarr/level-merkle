@@ -22,7 +22,6 @@ module.exports = function (db, merkleDb, opts) {
     return _shasum(data, alg, enc)
   }
 
-
   function encode (key, length) {
     var p = ((length || key.length) / chunk).toString(36)
   
@@ -35,6 +34,12 @@ module.exports = function (db, merkleDb, opts) {
 
   if('string' === typeof merkleDb)
     merkleDb = db.sublevel(merkleDb)
+
+
+  //idea: make prehook to represent as content store,
+  //and then the merkle section into an index back to that.
+  //then, by allowing prefixes, it would be possible to 
+  //replicate overlapping sets, through different trees.
 
   db.pre(function (data, add) {
     var v = JSON.stringify({key: data.key, value: data.value})
