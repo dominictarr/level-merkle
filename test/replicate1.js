@@ -21,6 +21,23 @@ function all(db, cb) {
   pull(pl.read(db), pull.collect(cb))
 }
 
+function equalDbs (t) {
+  var timer
+  return function () {
+    clearTimeout(timer)
+    timer = setTimeout(function () {
+      all(db, function (err, ary1) {
+        if(err) throw err
+        all(db2, function (err, ary2) {
+          if(err) throw err
+          t.deepEqual(ary1, ary2)
+          t.end()
+        })
+      })
+    }, 500)
+  }
+}
+
 tape('replicate', function (t) {
 
   //populate two databases with mostly the same data,
@@ -49,19 +66,17 @@ tape('replicate', function (t) {
     var s2 = merkleDb2.createStream(2)
     var timer
     s1.pipe(s2).pipe(s1)
-    util.consistent(s1, s2, function () {
-      clearTimeout(timer)
-      timer = setTimeout(function () {
-        all(db, function (err, ary1) {
-          if(err) throw err
-          all(db2, function (err, ary2) {
-            if(err) throw err
-            t.deepEqual(ary1, ary2)
-            t.end()
-          })
-        })
-      }, 1000)
-    })
+    util.consistent(s1, s2, equalDbs(t))
 //  }
 
+})
+
+tape('more updates', function (t) {
+  util.populate(db, 10, 'k', 113)
+  util.populate(db2, 10, 'x', 99)
+    var s1 = merkleDb.createStream(1)
+    var s2 = merkleDb2.createStream(2)
+    var timer
+    s1.pipe(s2).pipe(s1)
+    util.consistent(s1, s2, equalDbs(t))
 })
