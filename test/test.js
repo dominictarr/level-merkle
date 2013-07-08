@@ -10,6 +10,9 @@ var hashes = require('./hashes.json')
 
 var db = sublevel(level('test-merkle'))
 
+//I've since changed the default options,
+//but these will work with the results I was testing against initially.
+
 var hashOpts = {
   encoding: 'hex',
   algorithm: 'sha1',
@@ -30,27 +33,8 @@ tape('simple', function (t) {
       pl.read(merkleDb, {min: '0!', max: '4!', keys: false}),
       pull.collect(function (err, ary) {
         if(err) throw err
-        //console.log(JSON.stringify(ary, null, 2))
         t.deepEqual(ary, hashes)
         t.end()
-        /*
-        merkleDb.getWithPrefix('', function (err, ary) {
-          console.log(err, ary)
-          merkleDb.check('-NOTAHASH', function (err, ary) {
-            console.log('CHECK', ary)
-            pull(
-              pull.values(ary),
-              pull.asyncMap(merkleDb.check),
-              pull.filter(),
-              pull.flatten(),
-              pull.collect(function (err, ary) {
-                console.log(err, ary.sort())
-                t.end()
-              })
-            )
-          })
-        })
-        */
       })
     )
   })
