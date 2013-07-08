@@ -8,6 +8,9 @@ var duplex  = require('duplex')
 module.exports = function (db, merkleDb, opts) {
 
   opts = opts || {}
+  var debug = opts.debug
+
+  var log = !debug ? function () {} : console.log.bind(console)
   var hopts = opts.hash || {}
 
   var chunk = hopts.chunk   || 1
@@ -45,11 +48,11 @@ module.exports = function (db, merkleDb, opts) {
   trigger(merkleDb, 'jobs', function (key) {
     var _key = key.key
     key = decode(_key)
-    if(!key) return console.log('DONE')
+    if(!key) return
     var k = encode(key)
     return _key.substring(0, _key.length - chunk) || undefined
   }, function (key, done) {
-    console.log('level', key)
+    log('level->', key)
     pull(
       pl.read(merkleDb, {min: key, max: key + '~', keys: false}),
       pull.collect(function (err, ary) {
@@ -84,7 +87,6 @@ module.exports = function (db, merkleDb, opts) {
   function getWithPrefix (prefix, cb) {
     var k = encode(prefix, prefix.length + chunk)
     //[prefix + '-' + hash, ...]
-    console.log('GwP', k)
     pull(
       pl.read(merkleDb, {min: k, max: k+'~'}),
       pull.collect(function (err, ary) {
@@ -103,11 +105,9 @@ module.exports = function (db, merkleDb, opts) {
     var prefix = parts[0]
     var hash   = parts[1]
     merkleDb.get(encode(prefix), function (err, value) {
-//      console.log(encode(prefix), value, hash)
       if(value === hash) {//hash matches, so do nothing
         cb(null, null)
       } else {
-        console.log('did not match', value, hash, [prefix])
         getWithPrefix(prefix, cb)
       }
     })
@@ -115,7 +115,6 @@ module.exports = function (db, merkleDb, opts) {
 
   merkleDb.check = function (hashes, cb) {
     getWithPrefix(hashes.prefix, function (err, _hashes) {
-      console.log(hashes, _hashes)
       cb(null, {prefix: _hashes.prefix, hashes: []})
     })
   }
@@ -142,7 +141,7 @@ module.exports = function (db, merkleDb, opts) {
     function diff(prefix, myHashes, yourHashes) {
       var my = toObject(myHashes)
       var your = toObject(yourHashes)
-      console.log('NODE'+n, 'COMPARE OUR HASHES')
+      log('NODE'+n, 'COMPARE OUR HASHES')
 
       var extra = [], expand = []
       for(var k in my) {
@@ -154,7 +153,7 @@ module.exports = function (db, merkleDb, opts) {
           expand.push(k)
       }
       if(extra.length) {
-        console.log('NODE'+n, 'must send all hashes prefixed with', extra)
+        log('NODE'+n, 'must send all hashes prefixed with', extra)
         extra.forEach(function (prefix) {
           var k = encode(prefix, max)
           pull(
@@ -166,10 +165,10 @@ module.exports = function (db, merkleDb, opts) {
         })
       }
       if(expand.length) {
-        console.log('NODE'+n, 'must send next layer of hashes:', expand)
+        log('NODE', n, 'must send next layer of hashes:', expand)
         expand.forEach(function (_prefix) {
           merkleDb.getWithPrefix(_prefix, function (err, hashes) {
-            console.log('NODE'+n, 'hashes to send:', hashes)
+            log('NODE', n, 'hashes to send:', hashes)
             d._data({prefix: _prefix, hashes: hashes})
           })
         })
@@ -183,14 +182,13 @@ module.exports = function (db, merkleDb, opts) {
       }
 
       if(missing.length)
-        console.log('NODE'+n, 'HAS MISSING HASHES', missing)
+        log('NODE', n, 'HAS MISSING HASHES', missing)
       else if(!expand.length && !extra.length && !synced) {
-        console.log('***********************************')
-        console.log('NODE'+n, 'IS IN SYNC!')
-        console.log('***********************************')
+        log('***********************************')
+        log('NODE', n, 'IS IN SYNC!')
+        log('***********************************')
         d.emit('sync', topHash)
         if(!synced) {
-          console.log('SEND TOP')
           synced = true; sendTop()
         }
 
@@ -200,10 +198,10 @@ module.exports = function (db, merkleDb, opts) {
     d.on('_data', function (data) {
       if(data.hashes) {
         //check agains my hashes at same depth.
-        console.log('NODE'+n, 'received hashes', data)
+        log('NODE', n, 'received hashes', data)
         if(data.top)
           merkleDb.topHash(function (err, hash) {
-            console.log('NODE'+n, 'compare tophashes', hash, data.hashes[0])
+            log('NODE', n, 'compare tophashes', hash, data.hashes[0])
             //d._data({top: true, hashes: [hash])
             diff('', [hash], data.hashes)
           })
@@ -214,9 +212,9 @@ module.exports = function (db, merkleDb, opts) {
           })
         }
       } else if(data.key) {
-        console.log('NODE'+n, 'recieved object', data)
+        log('NODE', n, 'recieved object', data)
         db.put(data.key, data.value, function (err) {
-          console.log('NODE'+n, 'replicated data')
+          log('NODE', n, 'replicated data')
         })
       }
     })
@@ -224,7 +222,7 @@ module.exports = function (db, merkleDb, opts) {
     sendTop()
 
     merkleDb.on('drain', function (hash) {
-      console.log('NODE'+n, 'drained', hash)
+      log('NODE', n, 'drained', hash)
       sendTop()
     })
 
