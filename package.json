@@ -8,8 +8,15 @@
     "url": "git://github.com/dominictarr/level-merkle.git"
   },
   "dependencies": {
+    "duplex": "1.0",
+    "level-trigger": "1.4.0",
+    "pull-level" : "1.1.6",
+    "pull-stream": ">=2.20 <3",
+    "shasum" : "0.0.3"
   },
   "devDependencies": {
+    "level-test": "1.4",
+    "tape": "1.0.4"
   },
   "scripts": {
     "test": "set -e; for t in test/*.js; do node $t; done"
