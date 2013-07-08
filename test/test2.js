@@ -1,4 +1,3 @@
-
 var pull = require('pull-stream')
 var pl   = require('pull-level')
 
@@ -15,32 +14,12 @@ var db2 = sublevel(level('test-merkle-rep2'))
 var merkleDb2 = merkle(db2, 'merkle')
 
 var tape = require('tape')
-
-function disunion (a, b) {
-  return a.filter(function (x) {
-    return !~b.indexOf(x)
-  })
-}
+var util = require('./util')
 
 tape('simple', function (t) {
 
-  pull(
-    pull.count(100),
-    pull.take(50),
-    pull.map(function (i) {
-      return {key: ''+i, value: (i * 13725).toString(36)}
-    }),
-    pl.write(db)
-  )
-
-  pull(
-    pull.count(100),
-    pull.take(51),
-    pull.map(function (i) {
-      return {key: ''+i, value: (i * 13725).toString(36)}
-    }),
-    pl.write(db2)
-  )
+  util.populate(db, 50)
+  util.populate(db2, 51)
 
   var n = 2
 
@@ -58,20 +37,7 @@ tape('simple', function (t) {
     var s2 = merkleDb2.createStream(2)
 
     s1.pipe(s2).pipe(s1)
-
-    var h1, h2
-    s1.on('sync', function (hash) {
-      h1 = hash
-      if(h1 == h2)
-        t.end()
-    })
-
-    s1.on('sync', function (hash) {
-      h2 = hash
-      if(h1 == h2)
-        t.end()
-    })
-
+    util.consistent(s1, s2, t.end.bind(t))
   }
 })
 
