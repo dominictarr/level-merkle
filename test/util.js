@@ -5,12 +5,12 @@ exports.populate = function (db, n, key, mult, done) {
   key = key || ''
   mult = mult || 13725
   pull(
-    pull.count(100),
+    pull.count(Math.max(100, n)),
     pull.take(n),
     pull.map(function (i) {
       return {key: key+i, value: (i * mult).toString(36)}
     }),
-    pl.write(db, done)
+    pl.write(db, {windowSize: 1000, windowTime: 50}, done)
   )
 }
 
