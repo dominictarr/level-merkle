@@ -10,7 +10,7 @@
   "dependencies": {
     "duplex": "1.0",
     "level-trigger": "1.2.0",
-    "pull-level" : "1.1.6",
+    "pull-level" : "1.1.7",
     "pull-stream": ">=2.20 <3",
     "shasum" : "0.0.3"
   },
