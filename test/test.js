@@ -25,6 +25,11 @@ var merkleDb = merkle(db, 'merkle', {hash: hashOpts})
 var tape = require('tape')
 
 tape('simple', function (t) {
+  t.plan(3)
+
+  merkleDb.topHash(function (err, hash) {
+    t.notOk(err)
+  })
 
   merkleDb.on('drain', function (hash) {
     t.equal(hash, 'feffb691271905d52c792a37fa9a88f623258932')
