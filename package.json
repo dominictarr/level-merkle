@@ -10,12 +10,12 @@
   "dependencies": {
     "duplex": "1.0",
     "level-trigger": "1.2.0",
-    "pull-level" : "1.1.8",
+    "pull-level": "1.1.8",
     "pull-stream": ">=2.20 <3",
-    "shasum" : "0.0.3"
+    "shasum": "0.0.3"
   },
   "devDependencies": {
-    "level-sublevel": "4.7",
+    "level-sublevel": "4.8",
     "level-test": "1.4",
     "through": "~2.3.4",
     "tape": "1.0.4"
@@ -24,5 +24,5 @@
     "test": "set -e; for t in test/*.js; do node $t; done"
   },
   "author": "Dominic Tarr <dominic.tarr@gmail.com> (http://dominictarr.com)",
-  "license": "MIT"  
+  "license": "MIT"
 }
