@@ -2,6 +2,7 @@ var tape = require('tape')
 var level = require('level-test')()
 var sublevel = require('level-sublevel')
 var through = require('through')
+var Merkle = require('../')
 
 tape(function (t) {
   t.plan(1)
@@ -11,8 +12,8 @@ tape(function (t) {
   }
   
   var merkle = {
-    a: require('level-merkle')(db.a, 'merkle', { debug: true }),
-    b: require('level-merkle')(db.b, 'merkle', { debug: true })
+    a: Merkle(db.a, 'merkle', { debug: true }),
+    b: Merkle(db.b, 'merkle', { debug: true })
   }
   
   db.a.batch([
