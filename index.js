@@ -78,9 +78,16 @@ module.exports = function (db, merkleDb, opts) {
   //when recieved a hash list,
 
   merkleDb.topHash = function (cb) {
-    merkleDb.get('0!', function (err, value) {
-      cb(err, '-' + value)
-    })
+    ;(function get () {
+      if(!triggerDb.isComplete())
+        return triggerDb.once('complete', get)
+
+      merkleDb.get('0!', function (err, value) {
+        if(err)
+          return triggerDb.once('complete', get)
+        cb(err, '-' + value)
+      })
+    })()
   }
 
   function disunion (a, b) {
@@ -139,6 +146,7 @@ module.exports = function (db, merkleDb, opts) {
     var topHash = null
     function sendTop () {
       merkleDb.topHash(function (err, hashes) {
+        if(err) return d.emit('error', err)
         d._data({top: true, hashes: [topHash = hashes]})
       })
     }
@@ -196,7 +204,6 @@ module.exports = function (db, merkleDb, opts) {
         if(!synced) {
           synced = true; sendTop()
         }
-
       }
     }
 
