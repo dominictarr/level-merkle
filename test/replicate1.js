@@ -5,8 +5,6 @@ var level   = require('level-test')()
 var sublevel = require('level-sublevel')
 var merkle   = require('../')
 
-var hashes = require('./hashes.json')
-
 var db = sublevel(level('test-merkle-rep2.1'))
 var merkleDb = merkle(db, 'merkle')
 
